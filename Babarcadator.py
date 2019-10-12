@@ -14,10 +14,10 @@ Device.pin_factory = MockFactory()
 led1 = LED(17)
 btn1 = Button(16)
 btns = {}
-btns[colors.BLUE,pos.BACK]=Button(10)
-btns[colors.BLUE,pos.FRONT]=Button(11)
-btns[colors.RED,pos.BACK]=Button(12)
-btns[colors.RED,pos.FRONT]=Button(13)
+btns[colors.BLUE,pos.BACK]=Button(10, hold_time=2)
+btns[colors.BLUE,pos.FRONT]=Button(11, hold_time=2)
+btns[colors.RED,pos.BACK]=Button(12, hold_time=2)
+btns[colors.RED,pos.FRONT]=Button(13, hold_time=2)
 
 led1.source = btn1
 logging.info('Lets go')
@@ -50,26 +50,62 @@ btn_pin.when_pressed = blueBackBtnPress
 
 
 
+
+btn_pin2 = Device.pin_factory.pin(2)
+def hello():
+    logging.info("HELLO")
+
+logging.info("Binding buttons")
+for color, position in btns:
+    def onpress(color=color,position=position):
+        logging.info("Button pressed " + str(color) +" "+  str(position))
+    btns[color,position].when_pressed = onpress
+    def onrelease(color=color,position=position):
+        logging.info("Button released " + str(color) +" "+  str(position))
+        game.score(game.getPlayerFromColorPosition(color,position))
+    btns[color,position].when_released = onrelease
+    def onheld(color=color,position=position):
+        logging.info("Button held " + str(color) +" "+  str(position))
+    btns[color,position].when_held = onheld
+logging.info("Bindind buttons complete")
+
+
 # Simulate RFID
 game.registerPlayer("Jerem",colors.RED,pos.FRONT)
 game.registerPlayer("Etienne",colors.RED,pos.BACK)
 game.registerPlayer("Colin",colors.BLUE,pos.FRONT)
 game.registerPlayer("Thomas",colors.BLUE,pos.BACK)
 
-btn_pin2 = Device.pin_factory.pin(2)
-def hello():
-    print("Hello")
 
-button = Button(2)
-button.when_pressed = hello
-sleep(0.1)
-btn_pin2.drive_low()
+#for i in range(0,10):
+#    mockBtn[colors.BLUE,pos.BACK].drive_low()
+#    mockBtn[colors.BLUE,pos.BACK].drive_high()
 
+from pynput.keyboard import Key, Listener
 
-btn_pin.drive_low()
-sleep(0.1)
-btn_pin.drive_high()
-sleep(0.1)
-btn_pin.drive_low()
-sleep(2)
+def on_release(key):
+    print('{0} release'.format(
+        key))
+    if key == Key.esc:
+        # Stop listener
+        return False
+    if key == Key.shift_l:
+        mockBtn[colors.RED, pos.BACK].drive_low()
+        mockBtn[colors.RED, pos.BACK].drive_high()
+    if key == Key.ctrl_l:
+        mockBtn[colors.RED,pos.FRONT].drive_low()
+        mockBtn[colors.RED,pos.FRONT].drive_high()
+    if key == Key.ctrl_r:
+        mockBtn[colors.BLUE, pos.BACK].drive_low()
+        mockBtn[colors.BLUE, pos.BACK].drive_high()
+    if key == Key.shift_r:
+        mockBtn[colors.BLUE,pos.FRONT].drive_low()
+        mockBtn[colors.BLUE,pos.FRONT].drive_high()
+
+# Collect events until released
+with Listener(
+        on_release=on_release) as listener:
+    listener.join()
+
+logging.info("End of simulation is over")
 #sleep(40000)

@@ -26,9 +26,11 @@ class Player:
             self._color = color
             self._position = position
             self._team = "unassigned"
+            self._initialPosition = position
+            self._initialColor = color
 
     def __str__(self):
-        return (self._playername + " " + self._team + " " + self._color +" " + self._position )
+        return (self._playername + " " + str( self._team) + " " + str(self._color) +" " + str(self._position) )
 
 class Game:
     def __init__(self):
@@ -72,7 +74,8 @@ class Game:
     def score(self,player):
         if self._status != gameStatus.STARTED:
             logging.warning('Trying to score before game start')
-        logging.info('Gooalll, adding goal event, then computing score')
+
+        logging.info('Gooalll from '+ str(player)+', adding goal event, then computing score')
         self._goalEvents.append(player)
         self.ComputeScore()
 
@@ -80,62 +83,65 @@ class Game:
 
     def ComputeScore(self):
         self._currentSet = 1
-        self._score[self._currentSet][teams.T1] = 0
-        self._score[self._currentSet][teams.T2] = 0
-        self._manches[teams.T1] = 0
-        self._manches[teams.T2] = 0
+        self._score = {self._currentSet:{teams.T1:0 , teams.T2:0}}
+        self._manches= {teams.T1 : 0 ,teams.T2:0}
+        for player in self._players:
+                player._position = player._initialPosition
+                player.color = player._initialColor
         lastEvent = ""
 
-        for scorer in self._goalEvents:
+        nbEvents = len(self._goalEvents)
+        for i,scorer in enumerate( self._goalEvents):
             self._score[self._currentSet][scorer._team] += 1
-            lastEvent = ' encore un but'
-
-            if self._score[self._currentSet][teams.T1] == 10 or self._score[self._currentSet][teams.T2] == 10 :
-                logging.debug('Set won by ' + scorer._color + scorer._team)
-                lastEvent = 'Set won by ' + scorer._color + scorer._team
+            logging.info(' encore un but')
+            logging.info(self._currentSet)
+            logging.info(self._score[self._currentSet][scorer._team])
+            logging.info(self._score[self._currentSet][scorer._team] == 10)
+            if (self._score[self._currentSet][scorer._team] == 10) :
+                logging.debug('Set won by ' + str(scorer._color) + str(scorer._team))
+                lastEvent = 'Set won by ' + str(scorer._color) + str(scorer._team)
                 self._manches[scorer._team]+= 1
 
                 for team in teams:
-                        if len(self._manches[team]) == 2:
-                            logging.debug('Game won by ' + scorer._color)
-                            lastEvent = 'Game won by ' + scorer._color
+                        if self._manches[team] == 2:
+                            logging.debug('Game won by ' + str(scorer._team))
+                            lastEvent = 'Game won by ' + str(scorer._team)
                             self._status = gameStatus.OVER
                             return
 
-
-                else:
-                    logging.debug('Starting a new set')
-                    self.swapTeamsColors()
-                    self._currentSet += 1
-                    self._score[self._currentSet][teams.T1] = 0
-                    self._score[self._currentSet][teams.T2] = 0
+                logging.debug('Starting a new set')
+                self.swapTeamsSide()
+                self._currentSet = self._currentSet +1
+                self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
             else:
                 if self._score[self._currentSet][scorer._team]%2 == 0:
-                    self.swapPlayersPosition(scorer._team)
-
+                    self.swapFrontBack(scorer._team)
+        logging.info("new score :"+str(self._score))
+        logging.info(str(self._players[0])+" "+ str(self._players[2]))
         return lastEvent
 
     def autogoal(self,color):
         logging.info('Autogoal')
 
-    def swapPlayersPosition(self,team):
-        logging.info('Swapping players position')
+    def swapFrontBack(self,team):
         for player in self._players:
             if player._team == team:
                 if player._position == pos.FRONT:
                     player._position = pos.BACK
                 elif player._position ==pos.BACK:
                     player._position = pos.FRONT
-                logging.info('position after player position swap '+ player)
 
-    def swapTeamsColors(self):
+                #logging.info('position after player position swap '+ str(player))
+
+    def swapTeamsSide(self):
         logging.info('Swapping teams colors')
         for player in self._players:
+            #logging.info("before swap " + str( player))
             if player._color == colors.RED:
                     player._color = colors.BLUE
-            if player._color == colors.BLUE:
+            elif player._color == colors.BLUE:
                     player._color=colors.RED
-            logging.info("after swap " + player)
+            logging.info("after swap " + str( player))
 
     def getPlayerFromColorPosition(self,color,pos):
         for player in self._players:
