@@ -137,6 +137,11 @@ class Game:
                     player._color=colors.RED
             logging.info("after swap " + player)
 
+    def getPlayerFromColorPosition(self,color,pos):
+        for player in self._players:
+            if player._position == pos and player._color==color:
+                return player
+        logging.error("no player found at position")
 
     def __str__(self):
         return (str(self._players)+str(self._score))
