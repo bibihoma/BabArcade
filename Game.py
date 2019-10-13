@@ -36,7 +36,7 @@ class Game:
     def __init__(self):
         self._players = []
         self._score = []
-        self._goalEvents = []
+        self._events = []
         self._status = gameStatus.WAITINGPlayers
 
     def startSet(self):
@@ -49,7 +49,6 @@ class Game:
         logging.info("uploading to google")
 
     def registerPlayer(self,playerName,color,position):
-        Player(playerName, color, position)
         if Player(playerName,color,position) in self._players:
                 logging.error('Player Already registered')
                 return False
@@ -66,59 +65,60 @@ class Game:
                         player._team = teams.T1
                 elif player._color== colors.RED:
                         player._team = teams.T2
-            self._status = gameStatus.STARTED
+            self.initializeGameAfterPlayerSection()
 
-    def rollback(self):
-        logging.info('Rollback')
-
-    def score(self,player):
-        if self._status != gameStatus.STARTED:
-            logging.warning('Trying to score before game start')
-
-        logging.info('Gooalll from '+ str(player)+', adding goal event, then computing score')
-        self._goalEvents.append(player)
-        self.ComputeScore()
-
-        return
-
-    def ComputeScore(self):
+    def initializeGameAfterPlayerSection(self):
+        self._status = gameStatus.STARTED
         self._currentSet = 1
         self._score = {self._currentSet:{teams.T1:0 , teams.T2:0}}
         self._manches= {teams.T1 : 0 ,teams.T2:0}
         for player in self._players:
                 player._position = player._initialPosition
                 player.color = player._initialColor
-        lastEvent = ""
 
-        nbEvents = len(self._goalEvents)
-        for i,scorer in enumerate( self._goalEvents):
-            self._score[self._currentSet][scorer._team] += 1
-            logging.info(' encore un but')
-            logging.info(self._currentSet)
-            logging.info(self._score[self._currentSet][scorer._team])
-            logging.info(self._score[self._currentSet][scorer._team] == 10)
-            if (self._score[self._currentSet][scorer._team] == 10) :
-                logging.debug('Set won by ' + str(scorer._color) + str(scorer._team))
-                lastEvent = 'Set won by ' + str(scorer._color) + str(scorer._team)
-                self._manches[scorer._team]+= 1
+    def rollback(self):
+        logging.info('Rollback')
+        self._events.pop()
+        self.initializeGameAfterPlayerSection()
+        for event in self._events:
+            self.processEvent(event,replay=True)
 
-                for team in teams:
-                        if self._manches[team] == 2:
-                            logging.debug('Game won by ' + str(scorer._team))
-                            lastEvent = 'Game won by ' + str(scorer._team)
-                            self._status = gameStatus.OVER
-                            return
+    def score(self,player):
+        if self._status != gameStatus.STARTED:
+            logging.error('Trying to score before game start, or after it ended')
+            return
 
+        logging.info('Gooalll from '+ str(player)+', adding goal event, then processing event')
+        self._events.append(player)
+        self.processEvent(self._events[-1])
+        return
+
+    def joker(self):
+        logging.warning("not yet implemented")
+
+    def processEvent(self,event,replay = False):
+        scorer = event
+        self._score[self._currentSet][scorer._team] += 1
+        if (self._score[self._currentSet][scorer._team] == 10) :
+            logging.debug('Set won by ' + str(scorer._color) + str(scorer._team))
+            lastEvent = 'Set won by ' + str(scorer._color) + str(scorer._team)
+            self._manches[scorer._team]+= 1
+            if self._manches[scorer._team] == 2:
+                logging.debug('Game won by ' + str(scorer._team))
+                lastEvent = 'Game won by ' + str(scorer._team)
+                self._status = gameStatus.OVER
+                return
+            else:
                 logging.debug('Starting a new set')
                 self.swapTeamsSide()
                 self._currentSet = self._currentSet +1
                 self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
-            else:
-                if self._score[self._currentSet][scorer._team]%2 == 0:
-                    self.swapFrontBack(scorer._team)
+        else:
+            if self._score[self._currentSet][scorer._team]%2 == 0:
+                self.swapFrontBack(scorer._team)
         logging.info("new score :"+str(self._score))
         logging.info(str(self._players[0])+" "+ str(self._players[2]))
-        return lastEvent
+
 
     def autogoal(self,color):
         logging.info('Autogoal')
