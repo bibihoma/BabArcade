@@ -56,7 +56,8 @@ jokerButton.when_released = jokerButtonRelease
 
 def submitButtonRelease():
     logging.info("submit button released")
-    if gameStatus != gameStatus.OVER:
+    logging.info(game._status)
+    if game._status != gameStatus.OVER:
         logging.warning("Trying to submit to google a game that is not over")
         return
     game.submit()

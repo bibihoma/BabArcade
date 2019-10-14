@@ -1,5 +1,14 @@
 import logging
 from enum import Enum
+from googleWrapper2 import uploadResults
+import json
+
+class Event(dict):
+    def __str__(self):
+        copy = self
+        if "scorer" in copy:
+            copy["scorer"]= copy["scorer"]._playername
+        return json.dumps(copy)
 
 class teams(Enum):
     T1 =1
@@ -38,6 +47,8 @@ class Game:
         self._score = []
         self._events = []
         self._status = gameStatus.WAITINGPlayers
+        self._winners = []
+        self._loosers = []
 
     def startSet(self):
         logging.info("Start set")
@@ -47,6 +58,11 @@ class Game:
 
     def submit(self):
         logging.info("uploading to google")
+        flattenedEvents =[]
+        for event in self._events:
+            flattenedEvents.append(str(event))
+        uploadResults(self._winners[0],self._winners[1],self._loosers[0],self._loosers[1],flattenedEvents)
+        logging.info("Game result uploaded successfully")
 
     def registerPlayer(self,playerName,color,position):
         if Player(playerName,color,position) in self._players:
@@ -69,6 +85,8 @@ class Game:
 
     def initializeGameAfterPlayerSection(self):
         self._status = gameStatus.STARTED
+        self._winners = []
+        self._loosers = []
         self._currentSet = 1
         self._score = {self._currentSet:{teams.T1:0 , teams.T2:0}}
         self._manches= {teams.T1 : 0 ,teams.T2:0}
@@ -89,7 +107,7 @@ class Game:
             return
 
         logging.info('Gooalll from '+ str(player)+', adding goal event, then processing event')
-        self._events.append(player)
+        self._events.append(Event({"type":'G',"scorer":player,"def":"TBD"}))
         self.processEvent(self._events[-1])
         return
 
@@ -97,28 +115,38 @@ class Game:
         logging.warning("not yet implemented")
 
     def processEvent(self,event,replay = False):
-        scorer = event
-        self._score[self._currentSet][scorer._team] += 1
-        if (self._score[self._currentSet][scorer._team] == 10) :
-            logging.debug('Set won by ' + str(scorer._color) + str(scorer._team))
-            lastEvent = 'Set won by ' + str(scorer._color) + str(scorer._team)
-            self._manches[scorer._team]+= 1
-            if self._manches[scorer._team] == 2:
-                logging.debug('Game won by ' + str(scorer._team))
-                lastEvent = 'Game won by ' + str(scorer._team)
-                self._status = gameStatus.OVER
-                return
-            else:
-                logging.debug('Starting a new set')
-                self.swapTeamsSide()
-                self._currentSet = self._currentSet +1
-                self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
-        else:
-            if self._score[self._currentSet][scorer._team]%2 == 0:
-                self.swapFrontBack(scorer._team)
-        logging.info("new score :"+str(self._score))
-        logging.info(str(self._players[0])+" "+ str(self._players[2]))
+        if event["type"] == 'G':
+            scorer = event["scorer"]
+            self._score[self._currentSet][scorer._team] += 1
+            if (self._score[self._currentSet][scorer._team] == 10) :
+                logging.debug('Set won by ' + str(scorer._color) + str(scorer._team))
+                lastEvent = 'Set won by ' + str(scorer._color) + str(scorer._team)
+                self._manches[scorer._team]+= 1
+                if self._manches[scorer._team] == 2:
+                    logging.debug('Game won by ' + str(scorer._team))
+                    lastEvent = 'Game won by ' + str(scorer._team)
+                    self._status = gameStatus.OVER
+                    self._winners = []
+                    self._loosers = []
+                    for player in self._players:
+                        if player._team == scorer._team:
+                            self._winners.append(player._playername)
+                        else:
+                            self._loosers.append(player._playername)
 
+                    return
+                else:
+                    logging.debug('Starting a new set')
+                    self.swapTeamsSide()
+                    self._currentSet = self._currentSet +1
+                    self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
+            else:
+                if self._score[self._currentSet][scorer._team]%2 == 0:
+                    self.swapFrontBack(scorer._team)
+            logging.info("new score :"+str(self._score))
+            logging.info(str(self._players[0])+" "+ str(self._players[2]))
+        elif event["type"]=="Joker":
+            logging.info("Joker not yet implemented")
 
     def autogoal(self,color):
         logging.info('Autogoal')
