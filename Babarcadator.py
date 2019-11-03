@@ -10,11 +10,13 @@ import logging
 from Game import *
 game = Game()
 
-try:
-    from MFRCReader import  MFRCReader
-    mfrcReader = MFRCReader()
-except ImportError:
-    pass
+#try:
+from MFRCReader import  MFRCReader
+mfrcReader = MFRCReader()
+#except ImportError:
+#    logging.warning("Could not import MFRCReader")
+#    logging.warning(str(ImportError))
+#    print(ImportError)
 
 
 logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
@@ -101,15 +103,6 @@ SubmitButton.when_released = submitButtonRelease
 
 logging.info("Bindind buttons complete")
 
-logging.info("Starting player registration")
-game.registerPlayer("Jerem", colors.RED, pos.FRONT)
-game.registerPlayer("Etienne", colors.RED, pos.BACK)
-game.registerPlayer("Colin", colors.BLUE, pos.FRONT)
-
-if mock==True:
-    game.registerPlayer("Thomas",colors.BLUE,pos.BACK)
-
-
 
 
 
@@ -162,6 +155,18 @@ if __name__ == '__main__':
         setMockButton()
     else:
         mock = False
+
+
+    logging.info("Starting player registration")
+    game.registerPlayer("Jerem", colors.RED, pos.FRONT)
+    game.registerPlayer("Etienne", colors.RED, pos.BACK)
+    game.registerPlayer("Colin", colors.BLUE, pos.FRONT)
+
+    if mock==True:
+        logging.debug("Autoregistering player4 as game is mocked")
+        game.registerPlayer("Thomas",colors.BLUE,pos.BACK)
+    else:
+        logging.debug("Mock is off, lets wait the combination of 2 events: card read then button pressed")
 
 
 
