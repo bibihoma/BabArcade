@@ -1,3 +1,5 @@
+from Dj import Dj
+
 import logging
 from enum import Enum
 from googleWrapper2 import uploadResults
@@ -58,6 +60,7 @@ class Game:
 
     def submit(self):
         logging.info("uploading to google")
+        Dj("Submit")
         flattenedEvents =[]
         for event in self._events:
             flattenedEvents.append(str(event))
@@ -81,9 +84,10 @@ class Game:
                         player._team = teams.T1
                 elif player._color== colors.RED:
                         player._team = teams.T2
-            self.initializeGameAfterPlayerSection()
+            self.initializeGameAfterPlayerSelection()
+            Dj('GameStart')
 
-    def initializeGameAfterPlayerSection(self):
+    def initializeGameAfterPlayerSelection(self):
         self._status = gameStatus.STARTED
         self._winners = []
         self._loosers = []
@@ -96,10 +100,15 @@ class Game:
 
     def rollback(self):
         logging.info('Rollback')
-        self._events.pop()
-        self.initializeGameAfterPlayerSection()
-        for event in self._events:
-            self.processEvent(event,replay=True)
+        if len(self._events) > 0:
+            self._events.pop()
+            self.initializeGameAfterPlayerSection()
+            for event in self._events:
+                self.processEvent(event,replay=True)
+            return
+        else:
+            logging.warning("Trying to rollback although there are no actions yet")
+
 
     def score(self,player):
         if self._status != gameStatus.STARTED:
@@ -143,6 +152,11 @@ class Game:
             else:
                 if self._score[self._currentSet][scorer._team]%2 == 0:
                     self.swapFrontBack(scorer._team)
+                    Dj('Switch', scorer._playername)
+                else:
+                    logging.debug('no switch, just a goal')
+                    Dj('Goal',scorer._playername)
+
             logging.info("new score :"+str(self._score))
             logging.info(str(self._players[0])+" "+ str(self._players[2]))
         elif event["type"]=="Joker":
