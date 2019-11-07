@@ -10,6 +10,9 @@ import logging
 from Game import *
 game = Game()
 
+logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
+
+
 #try:
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
@@ -18,8 +21,6 @@ mfrcReader = MFRCReader()
 #    logging.warning(str(ImportError))
 #    print(ImportError)
 
-
-logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
 
 logging.info('Set mocks')
 mockBtn = {}
