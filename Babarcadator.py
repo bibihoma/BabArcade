@@ -31,25 +31,25 @@ def setMockButton():
     # Set the default pin factory to a mock factory
     if mock:
         Device.pin_factory = MockFactory()
-        mockBtn[colors.BLUE,pos.BACK]=Device.pin_factory.pin(10)
-        mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(11)
-        mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(12)
-        mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(13)
+        mockBtn[colors.BLUE,pos.BACK]=Device.pin_factory.pin(36)
+        mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(37)
+        mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(38)
+        mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(40)
         rollBackButtonMock = Device.pin_factory.pin(7)
         jokerButtonMock = Device.pin_factory.pin(5)
         submitButtonMock = Device.pin_factory.pin(3)
 
 
 # devices
-AllButtonsLEDs = LEDplus(18)
+AllButtonsLEDs = LEDplus(33)
 AllButtonsLEDs._blinkPeriod = 4
 AllButtonsLEDs.blink()
 
 btns = {}
-btns[colors.BLUE,pos.BACK]=Button(10, hold_time=2)
-btns[colors.BLUE,pos.FRONT]=Button(11, hold_time=2)
-btns[colors.RED,pos.BACK]=Button(12, hold_time=2)
-btns[colors.RED,pos.FRONT]=Button(13, hold_time=2)
+btns[colors.BLUE,pos.BACK]=Button(36, hold_time=2)
+btns[colors.BLUE,pos.FRONT]=Button(37, hold_time=2)
+btns[colors.RED,pos.BACK]=Button(38, hold_time=2)
+btns[colors.RED,pos.FRONT]=Button(40, hold_time=2)
 rollBackButton = Button(7)
 jokerButton = Button(5)
 SubmitButton = Button(3)
@@ -173,7 +173,6 @@ if __name__ == '__main__':
 
 
     # Collect events until released
-    logging.debug("here")
     with Listener(
             on_release=on_release) as listener:
         listener.join()
