@@ -1,16 +1,21 @@
-from gpiozero.pins.mock import MockFactory
+#	from gpiozero.pins.mock import MockFactory
 from gpiozero import Device, Button, LED
 
 from LedBlinker import LEDplus
 import argparse
 from time import sleep
 import signal
-mock = True
 import logging
 from Game import *
 game = Game()
 
 logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
+
+#b32 = Button("BOARD32")
+#logging.debug(b32)
+#sleep(2)
+#logging.debug(b32)
+#sleep(3)
 
 
 #try:
@@ -35,24 +40,25 @@ def setMockButton():
         mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(37)
         mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(38)
         mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(40)
-        rollBackButtonMock = Device.pin_factory.pin(7)
+        rollBackButtonMock = Device.pin_factory.pin(35)
         jokerButtonMock = Device.pin_factory.pin(5)
         submitButtonMock = Device.pin_factory.pin(3)
 
 
 # devices
-AllButtonsLEDs = LEDplus(33)
+AllButtonsLEDs = LEDplus("BOARD29")
 AllButtonsLEDs._blinkPeriod = 4
 AllButtonsLEDs.blink()
 
 btns = {}
-btns[colors.BLUE,pos.BACK]=Button(36, hold_time=2)
-btns[colors.BLUE,pos.FRONT]=Button(37, hold_time=2)
-btns[colors.RED,pos.BACK]=Button(38, hold_time=2)
-btns[colors.RED,pos.FRONT]=Button(40, hold_time=2)
-rollBackButton = Button(7)
-jokerButton = Button(5)
-SubmitButton = Button(3)
+btns[colors.BLUE,pos.BACK]=Button("BOARD36", hold_time=2)
+btns[colors.BLUE,pos.FRONT]=Button("BOARD37", hold_time=2)
+btns[colors.RED,pos.BACK]=Button("BOARD38", hold_time=2)
+btns[colors.RED,pos.FRONT]=Button("BOARD40", hold_time=2)
+rollBackButton = Button("BOARD35")
+logging.debug(rollBackButton)
+jokerButton = Button("BOARD33")
+SubmitButton = Button("BOARD31")
 
 
 
@@ -67,15 +73,17 @@ for color, position in btns:
             if game._status==gameStatus.STARTED:
                 game.score(game.getPlayerFromColorPosition(color,position))
             if game._status==gameStatus.WAITINGPlayers:
-                if mfrcReader._RFIDTxt:
-                    game.registerPlayer(mfrcReader._RFIDTxt,color,position)
-                    mfrcReader._RFIDTxt = None
+                if mfrcReader._RFIDTxtQueue:
+                    game.registerPlayer(mfrcReader._RFIDTxtQueue,color,position)
+                    mfrcReader._RFIDTxtQueue = None
                 else:
                     logging.warning("need to tap NBA ring prior to tapping button")
                 if game._status == gameStatus.STARTED:
                     AllButtonsLEDs.on()
                     mfrcReader.kill()
                 else:
+                    logging.debug(game._players)
+                    logging.debug(len(game._players))
                     AllButtonsLEDs._blinkPeriod(4-len(game._players))
 
         btns[color,position].when_released = onrelease
@@ -169,6 +177,10 @@ if __name__ == '__main__':
     else:
         logging.debug("Mock is off, lets wait the combination of 2 events: card read then button pressed")
 
+    #while True:
+    #    logging.debug(rollBackButton)
+    #    logging.debug(rollBackButton.is_pressed)
+    #    sleep(1)
 
 
 

@@ -1,6 +1,6 @@
 from gpiozero import LED, Device
-from gpiozero.pins.mock import MockFactory
-Device.pin_factory = MockFactory()
+#from gpiozero.pins.mock import MockFactory
+#Device.pin_factory = MockFactory()
 import time
 import threading
 import logging
@@ -39,5 +39,6 @@ class LEDplus():
             self.led.toggle()
             time.sleep(self._blinkPeriod/2)
             time.time()-self._startTime
-            logging.info("Blink-"+str(self.__threading.ident)+' '+ str(time.localtime().tm_sec))
+            #logging.debug(self.led)
+            #logging.info("Blink-"+str(self.__threading.ident)+' '+ str(time.localtime().tm_sec))
         self.led.off()

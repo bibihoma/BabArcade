@@ -14,7 +14,7 @@ class MFRCReader():
     def __init__(self):
         self.__loop = True
         self.__threading = threading.Thread(target=self.__read)
-        self._RFIDTxt = None
+        self._RFIDTxtQueue = None
         logging.info('MFRC detection started')
         self.__threading.start()
 
@@ -25,7 +25,8 @@ class MFRCReader():
                 reader = SimpleMFRC522()
                 id, text = reader.read()
                 logging.info("NFC read: "+str(id)+ " - "+text)
-                self._RFIDTxt = text
+                if len(text)>0:
+                    self._RFIDTxtQueue  = text
             except exception:
                     print( exception)
             
