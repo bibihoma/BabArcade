@@ -70,16 +70,19 @@ class Game:
     def registerPlayer(self,playerName,color,position):
         if Player(playerName,color,position) in self._players:
                 logging.error('Player Already registered')
+                Dj("Error")
                 return False
 
         if self._status != gameStatus.WAITINGPlayers:
             logging.error('Trying to register a 5th player')
+            Dj("Error")
             return False
 
         for registeredPlayer in self._players:
             if registeredPlayer._color == color and registeredPlayer._position == position:
                 logging.debug([registeredPlayer._color, color , registeredPlayer._position, position])
                 logging.error('This slot is already registered by another player')
+                Dj("Error")
                 return False
 
         logging.info(playerName + ' joined the game')
@@ -127,7 +130,7 @@ class Game:
         self.processEvent(self._events[-1])
         return
 
-    def joker(self):
+    def joker(self,color):
         logging.warning("not yet implemented")
 
     def processEvent(self,event,replay = False):
@@ -149,6 +152,7 @@ class Game:
                             self._winners.append(player._playername)
                         else:
                             self._loosers.append(player._playername)
+                    Dj("Victory",scorer._playername)
 
                     return
                 else:
@@ -156,6 +160,7 @@ class Game:
                     self.swapTeamsSide()
                     self._currentSet = self._currentSet +1
                     self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
+                    Dj("Set",scorer._playername)
             else:
                 if self._score[self._currentSet][scorer._team]%2 == 0:
                     self.swapFrontBack(scorer._team)

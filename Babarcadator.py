@@ -8,6 +8,7 @@ import signal
 import logging
 from Game import *
 game = Game()
+from Dj import Dj
 
 logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
 
@@ -32,6 +33,7 @@ mockBtn = {}
 rollBackButtonMock = None
 jokerButtonMock = None
 submitButtonMock = None
+
 def setMockButton():
     # Set the default pin factory to a mock factory
     if mock:
@@ -46,19 +48,20 @@ def setMockButton():
 
 
 # devices
+buttonBounceTime = 0.005
 AllButtonsLEDs = LEDplus("BOARD29")
 AllButtonsLEDs._blinkPeriod = 4
 AllButtonsLEDs.blink()
 
 btns = {}
-btns[colors.BLUE,pos.BACK]=Button("BOARD36", hold_time=2)
-btns[colors.BLUE,pos.FRONT]=Button("BOARD37", hold_time=2)
-btns[colors.RED,pos.BACK]=Button("BOARD38", hold_time=2)
-btns[colors.RED,pos.FRONT]=Button("BOARD40", hold_time=2)
-rollBackButton = Button("BOARD35")
+btns[colors.BLUE,pos.BACK]=Button("BOARD36", hold_time=2, bounce_time=buttonBounceTime)
+btns[colors.BLUE,pos.FRONT]=Button("BOARD37", hold_time=2, bounce_time=buttonBounceTime)
+btns[colors.RED,pos.BACK]=Button("BOARD38", hold_time=2, bounce_time=buttonBounceTime)
+btns[colors.RED,pos.FRONT]=Button("BOARD40", hold_time=2, bounce_time=buttonBounceTime)
+rollBackButton = Button("BOARD35", bounce_time=buttonBounceTime)
 logging.debug(rollBackButton)
-jokerButton = Button("BOARD33")
-SubmitButton = Button("BOARD31")
+jokerButton = Button("BOARD33", bounce_time=buttonBounceTime)
+SubmitButton = Button("BOARD31", bounce_time=buttonBounceTime)
 
 
 
@@ -71,13 +74,20 @@ for color, position in btns:
         def onrelease(color=color,position=position):
             logging.info("Button released " + str(color) +" "+  str(position))
             if game._status==gameStatus.STARTED:
-                game.score(game.getPlayerFromColorPosition(color,position))
+                partnerPosition = pos.BACK
+                if position == pos.BACK:
+                    partnerPosition= pos.FRONT
+                if btns[color,partnerPosition].is_pressed:
+                    game.joker(color)
+                else:
+                    game.score(game.getPlayerFromColorPosition(color,position))
             if game._status==gameStatus.WAITINGPlayers:
                 if mfrcReader._RFIDTxtQueue:
                     game.registerPlayer(mfrcReader._RFIDTxtQueue,color,position)
                     mfrcReader._RFIDTxtQueue = None
                 else:
                     logging.warning("need to tap NBA ring prior to tapping button")
+                    Dj("Error")
                 if game._status == gameStatus.STARTED:
                     AllButtonsLEDs.on()
                     mfrcReader.kill()
@@ -181,8 +191,8 @@ if __name__ == '__main__':
     #    logging.debug(rollBackButton)
     #    logging.debug(rollBackButton.is_pressed)
     #    sleep(1)
-
-
+    Dj("Init")
+   
 
     # Collect events until released
     with Listener(

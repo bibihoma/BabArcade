@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import RPi.GPIO as GPIO
 import logging
-
+from Dj import Dj
 try:
     from mfrc522 import SimpleMFRC522
 except ImportError:
@@ -26,7 +26,9 @@ class MFRCReader():
                 id, text = reader.read()
                 logging.info("NFC read: "+str(id)+ " - "+text)
                 if len(text)>0:
-                    self._RFIDTxtQueue  = text
+                    if text != self._RFIDTxtQueue:
+                        self._RFIDTxtQueue  = text
+                        Dj("Switch")
             except exception:
                     print( exception)
             
