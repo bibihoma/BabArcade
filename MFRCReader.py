@@ -34,5 +34,5 @@ class MFRCReader():
         return
 
     def kill(self):
-        logging.debug("well, if I knew how to do that, I would kill the thread")
+        logging.debug("well, if I knew how to do that, I would kill the MFRC522 thread")
         self.__loop = False

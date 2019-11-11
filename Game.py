@@ -74,6 +74,13 @@ class Game:
 
         if self._status != gameStatus.WAITINGPlayers:
             logging.error('Trying to register a 5th player')
+            return False
+
+        for registeredPlayer in self._players:
+            if registeredPlayer._color == color and registeredPlayer._position == position:
+                logging.debug([registeredPlayer._color, color , registeredPlayer._position, position])
+                logging.error('This slot is already registered by another player')
+                return False
 
         logging.info(playerName + ' joined the game')
         self._players.append(Player(playerName,color,position))

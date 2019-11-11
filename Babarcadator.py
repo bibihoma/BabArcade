@@ -84,7 +84,7 @@ for color, position in btns:
                 else:
                     logging.debug(game._players)
                     logging.debug(len(game._players))
-                    AllButtonsLEDs._blinkPeriod(4-len(game._players))
+                    AllButtonsLEDs._blinkPeriod = 4- len(game._players)
 
         btns[color,position].when_released = onrelease
         def onheld(color=color,position=position):
