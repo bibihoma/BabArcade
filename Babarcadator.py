@@ -1,6 +1,7 @@
 #	from gpiozero.pins.mock import MockFactory
 from gpiozero import Device, Button, LED
-
+from gpiozero.pins.rpigpio import RPiGPIOFactory
+factory = RPiGPIOFactory()
 from LedBlinker import LEDplus
 import argparse
 from time import sleep
@@ -12,57 +13,43 @@ from Dj import Dj
 
 logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(message)s')
 
-#b32 = Button("BOARD32")
-#logging.debug(b32)
-#sleep(2)
-#logging.debug(b32)
-#sleep(3)
+Dj("Init")
 
+BlueBackPin = 16 # "BOARD36"
+BlueFrontPin = 26 # "BOARD37"
+RedBackPin = 20 #"BOARD38"
+RedFrontPin = 21# "BOARD40" #21
+AllLedsPin =  5 # "BOARD29"
 
-#try:
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
-#except ImportError:
-#    logging.warning("Could not import MFRCReader")
-#    logging.warning(str(ImportError))
-#    print(ImportError)
 
 
 logging.info('Set mocks')
 mockBtn = {}
-rollBackButtonMock = None
-jokerButtonMock = None
-submitButtonMock = None
 
 def setMockButton():
     # Set the default pin factory to a mock factory
     if mock:
         Device.pin_factory = MockFactory()
-        mockBtn[colors.BLUE,pos.BACK]=Device.pin_factory.pin(36)
-        mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(37)
-        mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(38)
-        mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(40)
-        rollBackButtonMock = Device.pin_factory.pin(35)
-        jokerButtonMock = Device.pin_factory.pin(5)
-        submitButtonMock = Device.pin_factory.pin(3)
+        mockBtn[colors.BLUE,pos.BACK]=Device.pin_factory.pin(BlueBackPin)
+        mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(BlueFrontPin)
+        mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(RedBackPin)
+        mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(RedFrontPin)
+
 
 
 # devices
 buttonBounceTime = 0.005
-AllButtonsLEDs = LEDplus("BOARD29")
+AllButtonsLEDs = LEDplus(AllLedsPin)
 AllButtonsLEDs._blinkPeriod = 4
 AllButtonsLEDs.blink()
 
 btns = {}
-btns[colors.BLUE,pos.BACK]=Button("BOARD36", hold_time=2, bounce_time=buttonBounceTime)
-btns[colors.BLUE,pos.FRONT]=Button("BOARD37", hold_time=2, bounce_time=buttonBounceTime)
-btns[colors.RED,pos.BACK]=Button("BOARD38", hold_time=2, bounce_time=buttonBounceTime)
-btns[colors.RED,pos.FRONT]=Button("BOARD40", hold_time=2, bounce_time=buttonBounceTime)
-rollBackButton = Button("BOARD35", bounce_time=buttonBounceTime)
-logging.debug(rollBackButton)
-jokerButton = Button("BOARD33", bounce_time=buttonBounceTime)
-SubmitButton = Button("BOARD31", bounce_time=buttonBounceTime)
-
+btns[colors.BLUE,pos.BACK]=Button(BlueBackPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
+btns[colors.BLUE,pos.FRONT]=Button(BlueFrontPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
+btns[colors.RED,pos.BACK]=Button(RedBackPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
+btns[colors.RED,pos.FRONT]=Button(RedFrontPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
 
 
 logging.info("Binding buttons")
@@ -95,30 +82,15 @@ for color, position in btns:
                     logging.debug(game._players)
                     logging.debug(len(game._players))
                     AllButtonsLEDs._blinkPeriod = 4- len(game._players)
+            #if game._status==gameStatus.OVER:
+            #    logging.info("About to launch a rocket and submit score to googlesheet")
+            #    sleep(5)
+            #    game.submit()
 
         btns[color,position].when_released = onrelease
         def onheld(color=color,position=position):
             logging.info("Button held " + str(color) +" "+  str(position))
         btns[color,position].when_held = onheld
-
-def rollBackButtonRelease():
-    logging.info("Rollback button released")
-    game.rollback()
-rollBackButton.when_released = rollBackButtonRelease
-
-def jokerButtonRelease():
-    logging.info("joker button released")
-    game.joker()
-jokerButton.when_released = jokerButtonRelease
-
-def submitButtonRelease():
-    logging.info("submit button released")
-    logging.info(game._status)
-    if game._status != gameStatus.OVER:
-        logging.warning("Trying to submit to google a game that is not over")
-        return
-    game.submit()
-SubmitButton.when_released = submitButtonRelease
 
 logging.info("Bindind buttons complete")
 
@@ -185,14 +157,8 @@ if __name__ == '__main__':
         logging.debug("Autoregistering player4 as game is mocked")
         game.registerPlayer("Thomas",colors.BLUE,pos.BACK)
     else:
-        logging.debug("Mock is off, lets wait the combination of 2 events: card read then button pressed")
+        logging.debug("Mock is off, lets wait sequence of events: card read then button pressed")
 
-    #while True:
-    #    logging.debug(rollBackButton)
-    #    logging.debug(rollBackButton.is_pressed)
-    #    sleep(1)
-    Dj("Init")
-   
 
     # Collect events until released
     with Listener(

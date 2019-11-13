@@ -7,7 +7,8 @@ from time import sleep
 import signal
 import logging
 
-button =Button("BOARD32")
+button =Button(21)
+led = LED(23)
 
 while True:
     sleep(0.5)
@@ -17,3 +18,5 @@ while True:
     else:
         print("Button is not pressed")
         print(button)
+    print(led)
+    led.toggle()
