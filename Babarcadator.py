@@ -131,8 +131,8 @@ def on_release(key):
         submitButtonMock.drive_low()
         submitButtonMock.drive_high()
 
-logging.info("Emulate button with keyboards")
-from pynput.keyboard import Key, Listener
+#logging.info("Emulate button with keyboards")
+#from pynput.keyboard import Key, Listener
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Arcadify Foosball')
@@ -159,7 +159,10 @@ if __name__ == '__main__':
     else:
         logging.debug("Mock is off, lets wait sequence of events: card read then button pressed")
 
-
+    while True:
+        sleep(10)
+        logging.debug("main programm still alive")
+        pass   
     # Collect events until released
     with Listener(
             on_release=on_release) as listener:
