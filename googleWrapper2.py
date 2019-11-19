@@ -8,8 +8,26 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from openpyxl.utils import get_column_letter
+#from openpyxl.utils import get_column_letter
 import datetime
+
+
+def getExcelColumnName( columnNumber):
+    dividend = columnNumber
+    columnName = ""
+
+    while (dividend > 0):
+    
+        modulo = (dividend - 1) % 26;
+        print(modulo)
+        print(dividend)
+        columnName = str( chr(65 + modulo)) + columnName
+        dividend = int((dividend - modulo) / 26)
+        print(dividend)
+    
+
+    return columnName
+
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -56,7 +74,7 @@ def uploadResults(w1,w2,l1,l2,scorerlist = None):
         return 'No data found.'
 
     nbColumns = len(values[0])
-    targetRange=get_column_letter(nbColumns+1)+"2:"+get_column_letter(nbColumns+1)+"6"
+    targetRange=getExcelColumnName(nbColumns+1)+"2:"+getExcelColumnName(nbColumns+1)+"6"
 
     now = datetime.datetime.now()
 
@@ -72,7 +90,7 @@ def uploadResults(w1,w2,l1,l2,scorerlist = None):
         values = []
         for scorer in scorerlist:
             values.append([scorer])
-        targetRange = get_column_letter(nbColumns + 1) + "40:" + get_column_letter(nbColumns + 1) + str(40+len(scorerlist))
+        targetRange = getExcelColumnName(nbColumns + 1) + "40:" + getExcelColumnName(nbColumns + 1) + str(40+len(scorerlist))
         body = {'values': values}
         result = service.spreadsheets().values().append(
             spreadsheetId=ELO_SPREADSHEET_ID,

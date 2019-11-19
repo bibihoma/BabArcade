@@ -1,8 +1,10 @@
 #!/bin/sh
 # launcher.sh
 #navigate then python
+set -x
 cd /
-cd home/pi/Documents/DEV/BabArcade
+cd home/pi/BabArcade
+python -V
 git pull
-sudo python3 Babarcadator.py
+python Babarcadator.py
 cd /
