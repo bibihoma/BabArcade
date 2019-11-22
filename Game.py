@@ -16,6 +16,12 @@ class teams(Enum):
     T1 =1
     T2= 2
 
+def getOtherTeam(team):
+    if  team == teams.T1:
+        return teams.T2
+    else:
+        return teams.T1
+
 class colors (Enum):
     BLUE= 1
     RED= 2
@@ -108,6 +114,12 @@ class Game:
                 player._position = player._initialPosition
                 player.color = player._initialColor
 
+    def getTeamOfColor(self,color):
+        if  self._players[0]._color == color:
+            return  self._players[0]._team
+        else:
+            return getOtherTeam(self._players[0]._team)
+
     def rollback(self):
         logging.info('Rollback')
         if len(self._events) > 0:
@@ -131,7 +143,9 @@ class Game:
         return
 
     def joker(self,color):
-        logging.warning("not yet implemented")
+        logging.info("Joker, front and back player swap on "+str(color))
+        self._events.append(Event({"type":'Joker',"color":color}))
+        self.processEvent(self._events[-1])
 
     def processEvent(self,event,replay = False):
         if event["type"] == 'G':
@@ -172,7 +186,8 @@ class Game:
             logging.info("new score :"+str(self._score))
             logging.info(str(self._players[0])+" "+ str(self._players[2]))
         elif event["type"]=="Joker":
-            logging.info("Joker not yet implemented")
+            logging.info("Joker used by " + str(event["color"]))
+            game.swapFrontBack(getTeamOfColor(event["color"]))
 
     def autogoal(self,color):
         logging.info('Autogoal')

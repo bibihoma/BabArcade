@@ -52,15 +52,38 @@ btns[colors.BLUE,pos.FRONT]=Button(BlueFrontPin, hold_time=2, bounce_time=button
 btns[colors.RED,pos.BACK]=Button(RedBackPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
 btns[colors.RED,pos.FRONT]=Button(RedFrontPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
 
+discardNextReleases = False
 
 logging.info("Binding buttons")
 
 for color, position in btns:
         def onpress(color=color,position=position):
             logging.info("Button pressed " + str(color) +" "+  str(position))
+            for  otherBtnColor, otherBtnPosition in btns:
+               if  otherBtnColor != color  and otherBtnPosition != position and  btns[otherBtnColor,otherBtnPosition].is_pressed:
+                   discardNextReleases = False
+                   if  otherBtnColor != color:
+                       game.rollback()
+                   else:
+                       game.joker(color)
+              
         btns[color,position].when_pressed = onpress
+
+
         def onrelease(color=color,position=position):
             logging.info("Button released " + str(color) +" "+  str(position))
+            if discardNextReleases:
+                nbBtnsPressed = 0
+                for color,position in btns:
+                    if btns[color,position].is_pressed:
+                        nbBtnsPressed = nbBtnsPressed +1
+                if nbBtnsPressed > 1:
+                    logging.info("let's discard this release, and continue to discard")
+                else:
+                    logging.info("this was the last btn release to discard")
+                    discardNextReleases = False
+                return
+
             if game._status==gameStatus.STARTED:
                 partnerPosition = pos.BACK
                 if position == pos.BACK:
@@ -83,10 +106,10 @@ for color, position in btns:
                     logging.debug(game._players)
                     logging.debug(len(game._players))
                     AllButtonsLEDs._blinkPeriod = 4- len(game._players)
-            #if game._status==gameStatus.OVER:
-            #    logging.info("About to launch a rocket and submit score to googlesheet")
-            #    sleep(5)
-            #    game.submit()
+            if game._status==gameStatus.OVER:
+                logging.info("About to launch a rocket and submit score to googlesheet")
+                sleep(5)
+                game.submit()
 
         btns[color,position].when_released = onrelease
         def onheld(color=color,position=position):
