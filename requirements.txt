@@ -3,4 +3,5 @@ RPi.GPIO
 pygame
 google-api-python-client
 google_auth_oauthlib
-
+mfrc522
+gTTS
