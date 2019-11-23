@@ -61,7 +61,7 @@ for color, position in btns:
             logging.info("Button pressed " + str(color) +" "+  str(position))
             for  otherBtnColor, otherBtnPosition in btns:
                if  otherBtnColor != color  and otherBtnPosition != position and  btns[otherBtnColor,otherBtnPosition].is_pressed:
-                   discardNextReleases = False
+                   discardNextReleases = True
                    if  otherBtnColor != color:
                        game.rollback()
                    else:
