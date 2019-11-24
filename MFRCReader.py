@@ -25,6 +25,7 @@ class MFRCReader():
                 reader = SimpleMFRC522()
                 id, text = reader.read()
                 logging.info("NFC read: "+str(id)+ " - "+text)
+                text = text.strip()
                 if len(text)>0:
                     if text != self._RFIDTxtQueue:
                         self._RFIDTxtQueue  = text

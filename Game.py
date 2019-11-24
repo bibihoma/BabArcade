@@ -4,6 +4,7 @@ import logging
 from enum import Enum
 from googleWrapper2 import uploadResults
 import json
+import random
 
 class Event(dict):
     def __str__(self):
@@ -74,7 +75,9 @@ class Game:
         logging.info("Game result uploaded successfully")
 
     def registerPlayer(self,playerName,color,position):
-        if Player(playerName,color,position) in self._players:
+        for player in self._players:
+            logging.debug(player._playername+"-compareted to-"+playerName)
+            if player._playername == playerName:
                 logging.error('Player Already registered')
                 Dj("Error")
                 return False
@@ -91,8 +94,11 @@ class Game:
                 Dj("Error")
                 return False
 
+        playerJoinAnnounces = [ playerName+" joinded the game.", playerName+" is in.", "Welcome "+ playerName + ".", "Go " + playerName+ " Go"]
+        announce = random.choice(playerJoinAnnounces)
         logging.info(playerName + ' joined the game')
         self._players.append(Player(playerName,color,position))
+        Dj("Announce","speaker", announce = announce)
         if len(self._players) == 4:
             logging.info('Game starting')
             for player in self._players:
@@ -123,13 +129,15 @@ class Game:
     def rollback(self):
         logging.info('Rollback')
         if len(self._events) > 0:
+            Dj("Announce",playerName = "Speaker",announce="Video assistant referee decision... Last action cancelled.")
             self._events.pop()
-            self.initializeGameAfterPlayerSection()
+            self.initializeGameAfterPlayerSelection()
             for event in self._events:
                 self.processEvent(event,replay=True)
             return
         else:
             logging.warning("Trying to rollback although there are no actions yet")
+            Dj("Error")
 
 
     def score(self,player):
@@ -144,6 +152,18 @@ class Game:
 
     def joker(self,color):
         logging.info("Joker, front and back player swap on "+str(color))
+        Dj("Switch","speaker")
+        frontPlayer =""
+        backPlayer =""
+        for player in  self._players:
+            if player._color == color:
+                if player._position== pos.FRONT:
+                    frontPlayer = player._playername
+                if player._position== pos.BACK:
+                    backPlayer  = player._playername
+
+        announce = "Joker.  " + frontPlayer + " goes to front and " + backPlayer + "goes to back."
+        Dj('Announce',playerName='speaker',announce=announce)
         self._events.append(Event({"type":'Joker',"color":color}))
         self.processEvent(self._events[-1])
 
@@ -166,7 +186,7 @@ class Game:
                             self._winners.append(player._playername)
                         else:
                             self._loosers.append(player._playername)
-                    Dj("Victory",scorer._playername)
+                    Dj("Victory",scorer._playername, replay=replay)
 
                     return
                 else:
@@ -174,20 +194,20 @@ class Game:
                     self.swapTeamsSide()
                     self._currentSet = self._currentSet +1
                     self._score[self._currentSet]= {teams.T1 : 0 ,teams.T2: 0}
-                    Dj("Set",scorer._playername)
+                    Dj("Set",scorer._playername, replay = replay)
             else:
                 if self._score[self._currentSet][scorer._team]%2 == 0:
                     self.swapFrontBack(scorer._team)
-                    Dj('Switch', scorer._playername)
+                    Dj('Switch', scorer._playername, replay= replay)
                 else:
                     logging.debug('no switch, just a goal')
-                    Dj('Goal',scorer._playername)
+                    Dj('Goal',scorer._playername, replay = replay)
 
             logging.info("new score :"+str(self._score))
             logging.info(str(self._players[0])+" "+ str(self._players[2]))
         elif event["type"]=="Joker":
             logging.info("Joker used by " + str(event["color"]))
-            game.swapFrontBack(getTeamOfColor(event["color"]))
+            self.swapFrontBack(self.getTeamOfColor(event["color"]))
 
     def autogoal(self,color):
         logging.info('Autogoal')
@@ -217,6 +237,17 @@ class Game:
             if player._position == pos and player._color==color:
                 return player
         logging.error("no player found at position")
+
+    def announceStatus(self):
+        announce ='    Red ' + str(self._score[self._currentSet][self.getTeamOfColor(colors.RED )] )+"." 
+        announce+= " Blue " + str(self._score[self._currentSet][self.getTeamOfColor(colors.BLUE )] )+"." 
+        frontPlayers = []
+        for player in self._players:
+            if player._position == pos.FRONT:
+                frontPlayers.append(player._playername )
+        announce += " and ".join( frontPlayers) + ' attack.'
+        Dj("Announce" , playerName="speaker",announce=announce)
+	
 
     def __str__(self):
         return (str(self._players)+str(self._score))

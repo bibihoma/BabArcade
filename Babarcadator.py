@@ -17,31 +17,18 @@ logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(messag
 Dj("Init")
 
 BlueBackPin = 16 # "BOARD36"
-BlueFrontPin = 26 # "BOARD37"
+BlueFrontPin = 19 # "BOARD37"
 RedBackPin = 20 #"BOARD38"
-RedFrontPin = 21# "BOARD40" #21
+RedFrontPin = 21 # "BOARD40" #21
 AllLedsPin =  5 # "BOARD29"
 
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
 
 
-logging.info('Set mocks')
-mockBtn = {}
-
-def setMockButton():
-    # Set the default pin factory to a mock factory
-    if mock:
-        Device.pin_factory = MockFactory()
-        mockBtn[colors.BLUE,pos.BACK]=Device.pin_factory.pin(BlueBackPin)
-        mockBtn[colors.BLUE,pos.FRONT]=Device.pin_factory.pin(BlueFrontPin)
-        mockBtn[colors.RED,pos.BACK]=Device.pin_factory.pin(RedBackPin)
-        mockBtn[colors.RED,pos.FRONT]=Device.pin_factory.pin(RedFrontPin)
-
-
 
 # devices
-buttonBounceTime = 0.005
+buttonBounceTime = None
 AllButtonsLEDs = LEDplus(AllLedsPin)
 AllButtonsLEDs._blinkPeriod = 4
 AllButtonsLEDs.blink()
@@ -52,7 +39,7 @@ btns[colors.BLUE,pos.FRONT]=Button(BlueFrontPin, hold_time=2, bounce_time=button
 btns[colors.RED,pos.BACK]=Button(RedBackPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
 btns[colors.RED,pos.FRONT]=Button(RedFrontPin, hold_time=2, bounce_time=buttonBounceTime,pin_factory=factory)
 
-discardNextReleases = False
+game._discardNextReleases = False
 
 logging.info("Binding buttons")
 
@@ -60,38 +47,44 @@ for color, position in btns:
         def onpress(color=color,position=position):
             logging.info("Button pressed " + str(color) +" "+  str(position))
             for  otherBtnColor, otherBtnPosition in btns:
-               if  otherBtnColor != color  and otherBtnPosition != position and  btns[otherBtnColor,otherBtnPosition].is_pressed:
-                   discardNextReleases = True
-                   if  otherBtnColor != color:
+              
+               if  (otherBtnColor != color  or  otherBtnPosition != position) and  btns[otherBtnColor,otherBtnPosition].is_pressed:
+                   logging.debug("Discarding button releases from now on")
+                   game._discardNextReleases = True
+                   if  otherBtnColor != color and  otherBtnPosition== position:
                        game.rollback()
-                   else:
+                       return
+                   if  otherBtnColor != color and otherBtnPosition != position:
+                       game.announceStatus()
+                       return
+                   if otherBtnColor == color:
                        game.joker(color)
+                       return
+              
+            logging.debug("only this button is pressed")
               
         btns[color,position].when_pressed = onpress
 
 
         def onrelease(color=color,position=position):
             logging.info("Button released " + str(color) +" "+  str(position))
-            if discardNextReleases:
+            if game._discardNextReleases:
+                logging.debug("button releases are currently discarded")
                 nbBtnsPressed = 0
                 for color,position in btns:
-                    if btns[color,position].is_pressed:
+                    logging.debug(btns[color,position])
+                    if btns[color,position].is_active:
                         nbBtnsPressed = nbBtnsPressed +1
-                if nbBtnsPressed > 1:
+                logging.debug("nb btns pressed: " + str(nbBtnsPressed))
+                if nbBtnsPressed > 0:
                     logging.info("let's discard this release, and continue to discard")
                 else:
                     logging.info("this was the last btn release to discard")
-                    discardNextReleases = False
+                    game._discardNextReleases = False
                 return
 
             if game._status==gameStatus.STARTED:
-                partnerPosition = pos.BACK
-                if position == pos.BACK:
-                    partnerPosition= pos.FRONT
-                if btns[color,partnerPosition].is_pressed:
-                    game.joker(color)
-                else:
-                    game.score(game.getPlayerFromColorPosition(color,position))
+                game.score(game.getPlayerFromColorPosition(color,position))
             if game._status==gameStatus.WAITINGPlayers:
                 if mfrcReader._RFIDTxtQueue:
                     game.registerPlayer(mfrcReader._RFIDTxtQueue,color,position)
@@ -173,20 +166,21 @@ if __name__ == '__main__':
 
 
     logging.info("Starting player registration")
-    game.registerPlayer("Jerem", colors.RED, pos.FRONT)
-    game.registerPlayer("Etienne", colors.RED, pos.BACK)
-    game.registerPlayer("Colin", colors.BLUE, pos.FRONT)
-
-    if mock==True:
-        logging.debug("Autoregistering player4 as game is mocked")
-        game.registerPlayer("Thomas",colors.BLUE,pos.BACK)
-    else:
-        logging.debug("Mock is off, lets wait sequence of events: card read then button pressed")
-
+    #game.registerPlayer("Jerem",  colors.RED, pos.FRONT)
+    #game.registerPlayer("Etienne",colors.RED, pos.BACK)
+    #game.registerPlayer("Colin",  colors.BLUE,pos.FRONT)
+    #game.registerPlayer("Thomas", colors.BLUE,pos.BACK)
     while True:
         sleep(10)
         logging.debug("main programm still alive")
-        pass   
+        nbp = 0
+        for color, position in btns:
+            #logging.debug(btns[color,position])
+            if btns[color,position].is_active:
+                nbp = nbp+1
+       # logging.debug(nbp)
+        
+       
     # Collect events until released
     with Listener(
             on_release=on_release) as listener:
