@@ -17,10 +17,10 @@ logging.basicConfig(level=logging.DEBUG,format='%(funcName)s:%(lineno)d:%(messag
 Dj("Init")
 
 BlueBackPin = 16 # "BOARD36"
-BlueFrontPin = 19 # "BOARD37"
+BlueFrontPin = 13
 RedBackPin = 20 #"BOARD38"
 RedFrontPin = 21 # "BOARD40" #21
-AllLedsPin =  5 # "BOARD29"
+AllLedsPin =  4
 
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
