@@ -107,6 +107,8 @@ for color, position in btns:
         btns[color,position].when_released = onrelease
         def onheld(color=color,position=position):
             logging.info("Button held " + str(color) +" "+  str(position))
+            game._discardNextReleases = True
+            game.announceStatus()
         btns[color,position].when_held = onheld
 
 logging.info("Bindind buttons complete")
