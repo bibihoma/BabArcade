@@ -5,12 +5,17 @@ from enum import Enum
 from googleWrapper2 import uploadResults
 import json
 import random
+import datetime
 
 class Event(dict):
     def __str__(self):
         copy = self
         if "scorer" in copy:
             copy["scorer"]= copy["scorer"]._playername
+        if "goalTime" copy:
+            copy["goalTime"] = copy["goalTime"].strftime("%X")
+        if "elapsedTimeSinceLastGoal" in copy:
+            copy["elapsedTimeSinceLastGoal"] = str(copy["elapsedTimeSinceLastGoal"])
         return json.dumps(copy)
 
 class teams(Enum):
@@ -26,12 +31,21 @@ def getOtherTeam(team):
 class colors (Enum):
     BLUE= 1
     RED= 2
-
+def getOtherColor(color):
+    if color == colors.BLUE:
+        return colors.RED
+    else:
+        return colors.BLUE
 class pos (Enum):
     FRONT= 1
     BACK = 2
     GOALFROMDEFENSE = 3
     NEUTRAL = 4
+def getOtherPosition(position):
+    if position==pos.FRONT:
+        retun pos.BACK
+    else:
+        return pos.FRONT
 
 class gameStatus(Enum):
     WAITINGPlayers=1
@@ -58,6 +72,8 @@ class Game:
         self._status = gameStatus.WAITINGPlayers
         self._winners = []
         self._loosers = []
+        self._startTime= datetime.datetime.now()
+        self._lastGoal = self._startTime
 
     def startSet(self):
         logging.info("Start set")
@@ -126,6 +142,13 @@ class Game:
         else:
             return getOtherTeam(self._players[0]._team)
 
+    def getDefenserOfAttackant(self,player):
+        for player in self._players:
+            if player.color == getOtherColor(player._color) and player._position == pos.BACK:
+                return player
+        logging.error("should never end up here as there should allways be an opposite defenser")
+
+
     def rollback(self):
         logging.info('Rollback')
         if len(self._events) > 0:
@@ -146,7 +169,13 @@ class Game:
             return
 
         logging.info('Gooalll from '+ str(player)+', adding goal event, then processing event')
-        self._events.append(Event({"type":'G',"scorer":player,"def":"TBD"}))
+        goalTime = datetime.datetime.now()
+        elapsedTimeSinceLastGoal = self._startTime
+        for event in self._events
+            if event["type"]=="G":
+                elapsedTimeSinceLastGoal = goalTime - event["goalTime"]
+
+        self._events.append(Event({"type":'G',"scorer":player._playername,"defense":self.getDefenserOfAttackant(player)._playername,"elapsedTimeSinceLastGoal":elapsedTimeSinceLastGoal,"goalTime":goalTime}))
         self.processEvent(self._events[-1])
         return
 
@@ -239,7 +268,7 @@ class Game:
         logging.error("no player found at position")
 
     def announceStatus(self):
-        announce ='    Red ' + str(self._score[self._currentSet][self.getTeamOfColor(colors.RED )] )+"." 
+        announce ='    Red ' + str(self._score[self._currentSet][self.getTeamOfColor(colors.RED )] )+"."
         announce+= " Blue " + str(self._score[self._currentSet][self.getTeamOfColor(colors.BLUE )] )+"." 
         frontPlayers = []
         for player in self._players:

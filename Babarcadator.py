@@ -25,7 +25,7 @@ AllLedsPin =  4
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
 
-
+AllButtonsLEDs._blinkPeriod = 4- len(game._players)
 
 # devices
 buttonBounceTime = None
@@ -123,32 +123,22 @@ def on_release(key):
         # Stop listener
         return False
     if key == Key.shift_l:
-        mockBtn[colors.RED, pos.BACK].drive_low()
-        mockBtn[colors.RED, pos.BACK].drive_high()
+        btns[colors.RED,pos.BACK].onrelease(colors.RED,pos.BACK)
     if key == Key.ctrl_l:
-        mockBtn[colors.RED,pos.FRONT].drive_low()
-        mockBtn[colors.RED,pos.FRONT].drive_high()
+        btns[colors.RED,pos.FRONT].onrelease(colors.RED,pos.FRONT)
     if key == Key.ctrl_r:
-        mockBtn[colors.BLUE, pos.BACK].drive_low()
-        mockBtn[colors.BLUE, pos.BACK].drive_high()
+        btns[colors.BLUE,pos.BACK].onrelease(colors.BLUE,pos.BACK)
     if key == Key.shift_r:
-        mockBtn[colors.BLUE,pos.FRONT].drive_low()
-        mockBtn[colors.BLUE,pos.FRONT].drive_high()
-
+        btns[colors.BLUE,pos.FRONT].onrelease(colors.BLUE,pos.FRONT)
     if key == Key.left:
         logging.info("Simulating a rollback button release")
-        rollBackButtonMock.drive_low()
-        rollBackButtonMock.drive_high()
 
     if key == Key.up:
         logging.info("Simulating a joker button release")
-        jokerButtonMock.drive_low()
-        jokerButtonMock.drive_high()
 
     if key == Key.down:
         logging.info("Simulating Submit score release")
-        submitButtonMock.drive_low()
-        submitButtonMock.drive_high()
+
 
 #logging.info("Emulate button with keyboards")
 #from pynput.keyboard import Key, Listener
@@ -160,29 +150,14 @@ if __name__ == '__main__':
     logging.debug("There")
     logging.debug(args)
     if args.MockRPi:
-        mock = True
-        logging.debug('Mocking')
-        setMockButton()
+        logging.info("Emulating Plaer registration")
+        game.registerPlayer("Jerem",  colors.RED, pos.FRONT)
+        game.registerPlayer("Etienne",colors.RED, pos.BACK)
+        game.registerPlayer("Colin",  colors.BLUE,pos.FRONT)
+        game.registerPlayer("Thomas", colors.BLUE,pos.BACK)
     else:
-        mock = False
+        logging.info("Starting player registration")
 
-
-    logging.info("Starting player registration")
-    #game.registerPlayer("Jerem",  colors.RED, pos.FRONT)
-    #game.registerPlayer("Etienne",colors.RED, pos.BACK)
-    #game.registerPlayer("Colin",  colors.BLUE,pos.FRONT)
-    #game.registerPlayer("Thomas", colors.BLUE,pos.BACK)
-    while True:
-        sleep(10)
-        logging.debug("main programm still alive")
-        nbp = 0
-        for color, position in btns:
-            #logging.debug(btns[color,position])
-            if btns[color,position].is_active:
-                nbp = nbp+1
-       # logging.debug(nbp)
-        
-       
     # Collect events until released
     with Listener(
             on_release=on_release) as listener:
