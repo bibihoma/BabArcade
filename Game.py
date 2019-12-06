@@ -6,16 +6,21 @@ from googleWrapper2 import uploadResults
 import json
 import random
 import datetime
+from time import sleep
 
 class Event(dict):
     def __str__(self):
         copy = self
         if "scorer" in copy:
             copy["scorer"]= copy["scorer"]._playername
-        if "goalTime" copy:
+        if "goalTime" in copy:
             copy["goalTime"] = copy["goalTime"].strftime("%X")
+        if "defenser" in copy:
+            logging.debug(str(copy["defenser"]))
+            copy["defenser"]=copy["defenser"]._playername
         if "elapsedTimeSinceLastGoal" in copy:
             copy["elapsedTimeSinceLastGoal"] = str(copy["elapsedTimeSinceLastGoal"])
+        logging.debug(json.dumps(copy))
         return json.dumps(copy)
 
 class teams(Enum):
@@ -41,9 +46,10 @@ class pos (Enum):
     BACK = 2
     GOALFROMDEFENSE = 3
     NEUTRAL = 4
+
 def getOtherPosition(position):
-    if position==pos.FRONT:
-        retun pos.BACK
+    if position == pos.FRONT:
+        return pos.BACK
     else:
         return pos.FRONT
 
@@ -123,6 +129,7 @@ class Game:
                 elif player._color== colors.RED:
                         player._team = teams.T2
             self.initializeGameAfterPlayerSelection()
+            sleep(3)
             Dj('GameStart')
 
     def initializeGameAfterPlayerSelection(self):
@@ -143,9 +150,9 @@ class Game:
             return getOtherTeam(self._players[0]._team)
 
     def getDefenserOfAttackant(self,player):
-        for player in self._players:
-            if player.color == getOtherColor(player._color) and player._position == pos.BACK:
-                return player
+        for otherPlayer in self._players:
+            if otherPlayer._color == getOtherColor(player._color) and otherPlayer._position == pos.BACK:
+                return otherPlayer
         logging.error("should never end up here as there should allways be an opposite defenser")
 
 
@@ -171,11 +178,11 @@ class Game:
         logging.info('Gooalll from '+ str(player)+', adding goal event, then processing event')
         goalTime = datetime.datetime.now()
         elapsedTimeSinceLastGoal = self._startTime
-        for event in self._events
+        for event in self._events:
             if event["type"]=="G":
                 elapsedTimeSinceLastGoal = goalTime - event["goalTime"]
 
-        self._events.append(Event({"type":'G',"scorer":player._playername,"defense":self.getDefenserOfAttackant(player)._playername,"elapsedTimeSinceLastGoal":elapsedTimeSinceLastGoal,"goalTime":goalTime}))
+        self._events.append(Event({"type":'G',"scorer":player,"defenser":self.getDefenserOfAttackant(player),"elapsedTimeSinceLastGoal":elapsedTimeSinceLastGoal,"goalTime":goalTime}))
         self.processEvent(self._events[-1])
         return
 

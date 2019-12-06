@@ -25,8 +25,6 @@ AllLedsPin =  4
 from MFRCReader import  MFRCReader
 mfrcReader = MFRCReader()
 
-AllButtonsLEDs._blinkPeriod = 4- len(game._players)
-
 # devices
 buttonBounceTime = None
 AllButtonsLEDs = LEDplus(AllLedsPin)
@@ -159,9 +157,10 @@ if __name__ == '__main__':
         logging.info("Starting player registration")
 
     # Collect events until released
-    with Listener(
-            on_release=on_release) as listener:
-        listener.join()
+    while True:
+        sleep(20)
+        logging.debug("main programm still alive")
+      
 
     logging.info("End of simulation is over")
     #sleep(40000)
