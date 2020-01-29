@@ -143,16 +143,20 @@ def on_release(key):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Arcadify Foosball')
-    parser.add_argument('--MockRPi', action='store_true')
+    parser.add_argument('--autoRegister', action='store_true')
+    parser.add_argument('--goal', type=int, help='foo help', default=0)
     args = parser.parse_args()
     logging.debug("There")
     logging.debug(args)
-    if args.MockRPi:
+    if args.autoRegister:
         logging.info("Emulating Plaer registration")
         game.registerPlayer("Jerem",  colors.RED, pos.FRONT)
         game.registerPlayer("Etienne",colors.RED, pos.BACK)
         game.registerPlayer("Colin",  colors.BLUE,pos.FRONT)
         game.registerPlayer("Thomas", colors.BLUE,pos.BACK)
+        logging.debug(args.goal)
+        for i in range( 1,args.goal):
+            game.score(game._players[0])
     else:
         logging.info("Starting player registration")
 

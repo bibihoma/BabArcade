@@ -8,6 +8,6 @@ date >> logs.txt
 pyenv verions
 python -V  
 git pull  
-/home/pi/.pyenv/versions/3.7.5/bin/python Babarcadator.py
+python3 Babarcadator.py
 
 cd /

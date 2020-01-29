@@ -12,6 +12,7 @@ class Dj():
     def __init__(self,event,playerName="",announce=None, replay = False):
         if replay == True:
             return ;
+        logging.info(event)
         file =''
         if event=="Announce":
             filePattern= 'sounds/announces/'+announce+'*'
