@@ -1,3 +1,5 @@
+![alt text](http://url/to/img.png)
+
 On top of install,
 
 Need to switch SPI to on to enable MISO at raspberry level (UI)
