@@ -1,4 +1,4 @@
-![alt text](http://url/to/img.png)
+![Screenshot](screenshot.png)
 
 On top of install,
 
